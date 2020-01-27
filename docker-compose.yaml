@@ -13,7 +13,49 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - landrs
-      
+
+  database:
+    image: postgres:10-alpine
+    env_file: secrets.env
+    environment:
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_DATABASE=postgres
+    volumes:
+      - database_vol:/var/lib/postgresql/data
+    networks:
+      - landrs
+
+  frontend:
+    image: landrs/zazuko
+    build:
+      context: ../zazuko
+      dockerfile: Dockerfile
+    env_file: secrets.env
+    environment: 
+        - CUSTOMER_NAME=landrs
+        - POSTGRESQL_USER=postgres
+        - POSTGRESQL_DATABASE=postgres
+        - POSTGRESQL_HOST=database
+        - EDITOR_HOST=schema.landrs.org
+        - EDITOR_PROTOCOL=http
+        - OAUTH_HOST=https://github.com/login/oauth
+        - ONTOLOGY_RAW_URL=https://raw.githubusercontent.com/landrs-toolkit/LANDRS-o/master/ontology.nt
+        - STRUCTURE_RAW_URL=https://raw.githubusercontent.com/landrs-toolkit/LANDRS-o/master/structure.nt
+        - GITHUB_REPO=LANDRS-o
+        - GITHUB_REPO_OWNER=landrs-toolkit
+        - GITHUB_REPO_BRANCH=master
+        - DEBUG=editor:*
+    extra_hosts:
+      - "schema.landrs.org:127.0.0.1"
+    labels:
+      - traefik.http.routers.frontend.rule=Host(`schema.landrs.org`)
+      - traefik.http.services.frontend.loadbalancer.server.port=3000
+    networks:
+      - landrs
+
+volumes:
+  database_vol:
+
 networks:
   landrs:
     driver: bridge
