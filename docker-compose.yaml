@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  landrs-proxy:
+    image: traefik:v2.0
+    command: --api.insecure=true --providers.docker
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - landrs
+      
+networks:
+  landrs:
+    driver: bridge
