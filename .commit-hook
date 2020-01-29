@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+if type "git-journal" > /dev/null; then
+    git journal v $1
+else
+    docker run -t -v $PWD:/app harbor.james-sweet.com/jsweet/git-journal:v1.8.1 v $1
+fi
