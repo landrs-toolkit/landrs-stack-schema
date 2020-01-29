@@ -12,7 +12,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - landrs
+      landrs:
+        aliases:
+          - schema.landrs.org
 
   database:
     image: postgres:10-alpine
@@ -39,14 +41,12 @@ services:
         - EDITOR_HOST=schema.landrs.org
         - EDITOR_PROTOCOL=http
         - OAUTH_HOST=https://github.com/login/oauth
-        - ONTOLOGY_RAW_URL=https://raw.githubusercontent.com/landrs-toolkit/LANDRS-o/master/ontology.nt
-        - STRUCTURE_RAW_URL=https://raw.githubusercontent.com/landrs-toolkit/LANDRS-o/master/structure.nt
-        - GITHUB_REPO=LANDRS-o
-        - GITHUB_REPO_OWNER=landrs-toolkit
-        - GITHUB_REPO_BRANCH=master
+        - ONTOLOGY_RAW_URL=https://raw.githubusercontent.com/Omegaice/o/example-com/ontology.nt
+        - STRUCTURE_RAW_URL=https://raw.githubusercontent.com/Omegaice/o/example-com/structure.nt
+        - GITHUB_REPO=o
+        - GITHUB_REPO_OWNER=Omegaice
+        #- GITHUB_REPO_BRANCH=patch-1
         - DEBUG=editor:*
-    extra_hosts:
-      - "schema.landrs.org:127.0.0.1"
     labels:
       - traefik.http.routers.frontend.rule=Host(`schema.landrs.org`)
       - traefik.http.services.frontend.loadbalancer.server.port=3000
