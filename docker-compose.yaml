@@ -45,8 +45,8 @@ services:
       context: ../zazuko
       dockerfile: Dockerfile
     env_file: secrets.env
-    environment:
-        - CUSTOMER_NAME=landrs
+    environment: 
+        - CUSTOMER_NAME=University of Notre Dame and Zazuko GmbH
         - POSTGRESQL_USER=postgres
         - POSTGRESQL_DATABASE=postgres
         - POSTGRESQL_HOST=database
