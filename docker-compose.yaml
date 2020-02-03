@@ -3,14 +3,26 @@ version: '3'
 services:
   proxy:
     image: traefik:v2.0
-    command: --api.insecure=true --providers.docker
+    command:
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker
+      - --providers.file.directory=/etc/traefik/dyn/
+      - --certificatesresolvers.le.acme.email=jsweet@nd.edu
+      - --certificatesresolvers.le.acme.storage=/data/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+    labels:
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.redirs.entrypoints=web"
+      - "traefik.http.routers.redirs.middlewares=redirect-to-https"
     ports:
-      # The HTTP port
       - "80:80"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
+      - "443:443"
     volumes:
+      - ./config:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock
+      - traefik_vol:/data/
     networks:
       landrs:
         aliases:
@@ -33,27 +45,30 @@ services:
       context: ../zazuko
       dockerfile: Dockerfile
     env_file: secrets.env
-    environment: 
+    environment:
         - CUSTOMER_NAME=landrs
         - POSTGRESQL_USER=postgres
         - POSTGRESQL_DATABASE=postgres
         - POSTGRESQL_HOST=database
         - EDITOR_HOST=schema.landrs.org
-        - EDITOR_PROTOCOL=http
+        - EDITOR_PROTOCOL=https
         - OAUTH_HOST=https://github.com/login/oauth
-        - ONTOLOGY_RAW_URL=https://raw.githubusercontent.com/Omegaice/o/example-com/ontology.nt
-        - STRUCTURE_RAW_URL=https://raw.githubusercontent.com/Omegaice/o/example-com/structure.nt
-        - GITHUB_REPO=o
-        - GITHUB_REPO_OWNER=Omegaice
-        #- GITHUB_REPO_BRANCH=patch-1
+        - ONTOLOGY_RAW_URL=https://raw.githubusercontent.com/landrs-toolkit/LANDRS-o/master/ontology.nt
+        - STRUCTURE_RAW_URL=https://raw.githubusercontent.com/landrs-toolkit/LANDRS-o/master/structure.nt
+        - GITHUB_REPO=LANDRS-o
+        - GITHUB_REPO_OWNER=landrs-toolkit
+        - GITHUB_REPO_BRANCH=master
         - DEBUG=editor:*
     labels:
       - traefik.http.routers.frontend.rule=Host(`schema.landrs.org`)
+      - traefik.http.routers.frontend.tls=true
+      - traefik.http.routers.frontend.tls.certresolver=le
       - traefik.http.services.frontend.loadbalancer.server.port=3000
     networks:
       - landrs
 
 volumes:
+  traefik_vol:
   database_vol:
 
 networks:
