@@ -36,6 +36,7 @@ services:
       - POSTGRESQL_DATABASE=postgres
     volumes:
       - database_vol:/var/lib/postgresql/data
+      - database_run_vol:/run/postgresql
     networks:
       - landrs
 
@@ -67,9 +68,27 @@ services:
     networks:
       - landrs
 
+  backups:
+    image: postgres:10-alpine
+    env_file: secrets.env
+    environment:
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_DATABASE=postgres
+    volumes:
+      - ${BACKUPS_ROOT_CRON_JOB_FILE_PATH-./pg_backup_script}:/etc/periodic/daily/pg_backup_script:ro
+      - ${BACKUPS_OUTPUT_FOLDER_PATH-./backups}:/backups
+      - database_vol:/var/lib/postgresql/data:ro
+      - database_run_vol:/run/postgresql:ro
+    entrypoint: crond -l 2 -f
+    depends_on:
+      - database
+    networks:
+      - landrs
+
 volumes:
   traefik_vol:
   database_vol:
+  database_run_vol:
 
 networks:
   landrs:
